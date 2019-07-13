@@ -1,7 +1,8 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Cat } from 'src/cats/interfaces/cat.interface';
 import { CreateCatDto } from './dto/createCat.dto';
 import { UpdateCatDto } from './dto/updateCat.dto';
+import { CatNotFoundException } from './exceptions/catNotFound.exception';
 
 @Injectable()
 export class CatsService {
@@ -11,11 +12,11 @@ export class CatsService {
         return this.cats;
     }
 
-    async findOne(id: string): Promise<Cat> {
-        const cat = this.cats.find(c => c.id === Number(id));
+    async findOne(id: number): Promise<Cat> {
+        const cat = this.cats.find(c => c.id === id);
 
         if (!cat) {
-            throw new HttpException('The cat with the given id was not found', HttpStatus.BAD_REQUEST);
+            throw new CatNotFoundException(id);
         }
 
         return cat;
@@ -37,7 +38,7 @@ export class CatsService {
         const cat = this.cats.find(c => c.id === updateCatDto.id);
 
         if (!cat) {
-            throw new HttpException('The cat with the given id was not found', HttpStatus.BAD_REQUEST);
+            throw new CatNotFoundException(updateCatDto.id);
         }
 
         cat.name = updateCatDto.name;
@@ -46,11 +47,11 @@ export class CatsService {
         return cat;
     }
 
-    async delete(id: string): Promise<void> {
-        const catIndex = this.cats.findIndex(c => c.id === Number(id));
+    async delete(id: number): Promise<void> {
+        const catIndex = this.cats.findIndex(c => c.id === id);
 
         if (catIndex === -1) {
-            throw new HttpException('The cat with the given id was not found', HttpStatus.BAD_REQUEST);
+            throw new CatNotFoundException(id);
         }
 
         this.cats.splice(catIndex, 1);
