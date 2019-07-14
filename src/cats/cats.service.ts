@@ -3,17 +3,19 @@ import { Cat } from 'src/cats/interfaces/cat.interface';
 import { CreateCatDto } from './dto/createCat.dto';
 import { UpdateCatDto } from './dto/updateCat.dto';
 import { CatNotFoundException } from './exceptions/catNotFound.exception';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class CatsService {
-    private readonly cats: Cat[] = [];
+    constructor(@InjectModel('Cat') private readonly catModel: Model<Cat>) { }
 
     async findAll(): Promise<Cat[]> {
-        return this.cats;
+        return await this.catModel.find();
     }
 
-    async findOne(id: number): Promise<Cat> {
-        const cat = this.cats.find(c => c.id === id);
+    async findOne(id: string): Promise<Cat> {
+        const cat = await this.catModel.findById(id);
 
         if (!cat) {
             throw new CatNotFoundException(id);
@@ -23,37 +25,22 @@ export class CatsService {
     }
 
     async create(createCatDto: CreateCatDto): Promise<Cat> {
-        const newCat: Cat = {
-            id: this.cats.length + 1,
-            name: createCatDto.name,
-            age: createCatDto.age
-        };
-
-        this.cats.push(newCat);
+        const newCat = await this.catModel.create(createCatDto);
 
         return newCat;
     }
 
-    async update(updateCatDto: UpdateCatDto): Promise<Cat> {
-        const cat = this.cats.find(c => c.id === updateCatDto.id);
+    async update(id: string, updateCatDto: UpdateCatDto): Promise<Cat> {
+        const updated = await this.catModel.findByIdAndUpdate(id, updateCatDto, { new: true });
 
-        if (!cat) {
-            throw new CatNotFoundException(updateCatDto.id);
-        }
-
-        cat.name = updateCatDto.name;
-        cat.age = updateCatDto.age;
-
-        return cat;
-    }
-
-    async delete(id: number): Promise<void> {
-        const catIndex = this.cats.findIndex(c => c.id === id);
-
-        if (catIndex === -1) {
+        if (!updated) {
             throw new CatNotFoundException(id);
         }
 
-        this.cats.splice(catIndex, 1);
+        return updated;
+    }
+
+    async delete(id: string): Promise<void> {
+        await this.catModel.findByIdAndRemove(id);
     }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, Put, Delete, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, Put, Delete } from '@nestjs/common';
 import { CatsService } from './cats.service';
 import { Cat } from './interfaces/cat.interface';
 import { UpdateCatDto } from './dto/updateCat.dto';
@@ -15,7 +15,7 @@ export class CatsController {
     }
 
     @Get(':id')
-    async findOne(@Param('id', new ParseIntPipe()) id: number): Promise<Cat> {
+    async findOne(@Param('id') id: string): Promise<Cat> {
         return await this.catsService.findOne(id);
     }
 
@@ -24,13 +24,13 @@ export class CatsController {
         return await this.catsService.create(createCatDto);
     }
 
-    @Put()
-    async update(@Body() updateCatDto: UpdateCatDto): Promise<Cat> {
-        return await this.catsService.update(updateCatDto);
+    @Put(':id')
+    async update(@Param('id') id: string, @Body() updateCatDto: UpdateCatDto): Promise<Cat> {
+        return await this.catsService.update(id, updateCatDto);
     }
 
     @Delete(':id')
-    async delete(@Param('id', new ParseIntPipe()) id: number): Promise<void> {
+    async delete(@Param('id') id: string): Promise<void> {
         return await this.catsService.delete(id);
     }
 }
